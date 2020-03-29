@@ -1,0 +1,3 @@
+CREATE DATABASE PyServerNode
+
+CREATE TABLE tb_account
