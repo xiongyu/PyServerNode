@@ -1,6 +1,7 @@
 #encoding: utf-8
 
 import protocol
+import customprotocol.p_player
 import struct
 import logger
 
@@ -26,15 +27,20 @@ def OnEcho(sock, oEchoProtocol):
     data = p.PacketData()
     sock.send(data)
 
+def OnPlayerInfo(sock, oInfo):
+    print(oInfo.m_Uid)
+    print(oInfo.m_Name)
+
 g_Func = {
     protocol.P_Hello_Idx : OnHello,
     protocol.P_Echo_Idx : OnEcho,
+    protocol.P_BaseInfo_Idx: OnPlayerInfo,
 }
 
 def OnEntry(sock, data):
     iProtocolNumber = struct.unpack("H", data[2:4])[0]
     cls = protocol.GetProtocol(iProtocolNumber)
-    logger.Info("有数据包进来可以解析了")
+    logger.Info("有数据包进来可以解析了,%s"%(iProtocolNumber))
     if not cls:
         logger.Warning("没找到合适的解析协议")
         return

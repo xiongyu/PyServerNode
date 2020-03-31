@@ -1,0 +1,2 @@
+## Dependent file
+- json5

@@ -3,6 +3,11 @@
 import sys
 sys.path.append("../common")
 
+# 把协议文件拷过来用
+import shutil
+shutil.rmtree("customprotocol/")
+shutil.copytree("../logic/customprotocol", "customprotocol/")
+
 #客户端与上一个没有任何改变
 import protocol
 from socket import socket, AF_INET, SOCK_STREAM
@@ -11,7 +16,7 @@ import entry, logger
 
 logger.Init()
 
-address='10.211.55.14'   #服务器的ip地址
+address='127.0.0.1'   #服务器的ip地址
 port=12349           #服务器的端口号
 s=socket(AF_INET, SOCK_STREAM)
 s.connect((address,port))

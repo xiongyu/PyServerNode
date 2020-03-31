@@ -8,8 +8,9 @@ import logger
 import login
 import service
 import database
+import player
 
-import entry
+import serverentry
 
 S_NOTRUN = 0
 S_LISTEN = 1
@@ -24,6 +25,7 @@ class CServerApplication:
 
         self.m_Status = S_NOTRUN
         self.m_Server = None
+        self.m_EntryFunc = None
 
         logger.Info("Server Application Init")
 
@@ -51,11 +53,11 @@ class CServerApplication:
         login.OnConnected(oMsg.m_SocketID)
 
     def OnDisconnected(self, oMsg):
-        oLink = login.GetLinkObject(oMsg.m_SocketID)
+        oLink = login.GetLinkObjectBySocketID(oMsg.m_SocketID)
         oLink.Disconnect("client close")
 
     def OnReadyRead(self, oMsg):
-        oLink = login.GetLinkObject(oMsg.m_SocketID)
+        oLink = login.GetLinkObjectBySocketID(oMsg.m_SocketID)
         oLink.m_RecvData += oMsg.m_Data["Data"]
 
         newdata, pkglist = protocol.GetRecvPackage(oLink.m_RecvData)
@@ -64,7 +66,7 @@ class CServerApplication:
 
         oLink.m_RecvData = newdata
         for pkgdata in pkglist:
-            entry.OnEntry(oLink, pkgdata)
+            serverentry.OnEntry(oLink, pkgdata, self.m_EntryFunc)
 
     def Exec(self):
         self.m_Server.Listen()
@@ -90,3 +92,6 @@ class CServerApplication:
 
         if signum in (signal.SIGINT, signal.SIGQUIT):
             self.Exit()
+
+    def SetEntry(self, oEntryFunc):
+        self.m_EntryFunc = oEntryFunc
