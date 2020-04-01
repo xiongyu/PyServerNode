@@ -1,9 +1,11 @@
 #encoding: utf-8
 
+import global_defines
 import protocol
 import customprotocol.p_player
 import struct
 import logger
+import time
 
 def OnHello(sock, oProtocol):
     print("Hello", oProtocol.m_Seed)
@@ -31,10 +33,20 @@ def OnPlayerInfo(sock, oInfo):
     print(oInfo.m_Uid)
     print(oInfo.m_Name)
 
+    p = protocol.p_login.P_RequestSyncTime()
+    p.m_ClientTime = global_defines.GetMillisecond()
+
+    data = p.PacketData()
+    sock.send(data)
+
+def OnSyncTime(sock, oSyncTime):
+    print("SyncTime:", oSyncTime.m_ClientTime, oSyncTime.m_ServerTime)
+
 g_Func = {
     protocol.P_Hello_Idx : OnHello,
     protocol.P_Echo_Idx : OnEcho,
     protocol.P_BaseInfo_Idx: OnPlayerInfo,
+    protocol.P_SyncTime_Idx: OnSyncTime,
 }
 
 def OnEntry(sock, data):

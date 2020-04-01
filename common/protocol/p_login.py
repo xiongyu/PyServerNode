@@ -25,6 +25,21 @@ class P_Login(CProtocol):
         , ("m_Password", VarType.String)
     )
 
+# 对时协议
+
+class P_RequestSyncTime(CProtocol):
+    m_ProtocolNumber = 0x4
+    m_Define = (
+        ("m_ClientTime", VarType.uInt32),
+    )
+
+class P_SyncTime(CProtocol):
+    m_ProtocolNumber = 0x5
+    m_Define = (
+        ("m_ClientTime", VarType.uInt32),
+        ("m_ServerTime", VarType.uInt32),
+    )
+
 class P_Echo(CProtocol):
     m_ProtocolNumber = 0xC350
     m_Define = (

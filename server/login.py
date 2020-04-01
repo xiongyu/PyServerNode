@@ -1,10 +1,21 @@
 #encoding: utf-8
 
 from bindfunc import CFunction
+import time
 import protocol
 import tcpserver
 import timer, logger
 import service
+
+def TimerCheckHeartbeat(iLinkID):
+    oLinkMgr = service.GetService("LinkManager")
+    oLink = oLinkMgr.GetLink(iLinkID)
+    if not oLink:
+        return
+    if int(time.time()) - oLink.m_Heartbeat < 10:
+        return
+
+    oLink.Disconnect("no heartbeat")
 
 class CLinkObject:
 
@@ -12,7 +23,10 @@ class CLinkObject:
         oLinkMgr = service.GetService("LinkManager")
         self.m_ID = oLinkMgr.UpdateID()
         self.m_SocketID = iSocketID
+        self.m_ProxyID = 0
         self.m_RecvData = bytes()
+        self.m_HeartbeatFlag = "Heartbeat_%s"%(self.m_ID)
+        self.m_ConnectedFlag = "Connected_%s"%(self.m_ID)
 
     def SendProtocol(self, oProtocol):
         oMgrServer = service.GetService("ServerManager")
@@ -23,8 +37,8 @@ class CLinkObject:
 
     def VerifyLink(self):
         # 定时5秒，这个链接如果不能在5秒内完成认证回复以及账密登陆，就拒绝连接
-        timer.Unschedule("Connected_%s"%(self.m_ID))
-        timer.Schedule(CFunction(ConnectTimeout, self.m_ID), 5000, "Connected_%s"%(self.m_ID))
+        timer.Unschedule(self.m_ConnectedFlag)
+        timer.Schedule(CFunction(ConnectTimeout, self.m_ID), 5000, self.m_ConnectedFlag)
 
         oProtocol = protocol.p_login.P_Hello()
         oProtocol.m_Seed = 123456789
@@ -32,10 +46,19 @@ class CLinkObject:
 
     def ConnectedFinish(self):
         logger.Info("%s Connected finish"%(self.m_ID))
-        timer.Unschedule("Connected_%s"%(self.m_ID))
+        timer.Unschedule(self.m_ConnectedFlag)
+        self.Heartbeat()
+        self.StartCheckHeartbeat()
+
+    def Heartbeat(self):
+        self.m_Heartbeat = int(time.time())
+
+    def StartCheckHeartbeat(self):
+        timer.Unschedule(self.m_HeartbeatFlag)
+        timer.Schedule(CFunction(TimerCheckHeartbeat, self.m_ID), 30000, self.m_HeartbeatFlag)
 
     def Disconnect(self, sReason):
-        timer.Unschedule("Connected_%s"%(self.m_ID))
+        timer.Unschedule(self.m_ConnectedFlag)
         logger.Info("%s disconnect r=%s"%(self.m_ID, sReason))
         oMgrServer = service.GetService("ServerManager")
         oTcpServer = oMgrServer.Get("client")
@@ -43,6 +66,9 @@ class CLinkObject:
 
         oLinkMgr = service.GetService("LinkManager")
         oLinkMgr.DelLink(self.m_ID)
+
+        oPlayerMgr = service.GetService('PlayerManager')
+        oPlayerMgr.Disconnected(self.m_ProxyID, sReason)
 
 class CLinkManager(service.CServiceBase):
     

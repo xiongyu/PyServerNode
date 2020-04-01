@@ -12,12 +12,11 @@ import player
 
 class CCustomPlayer(player.CPlayer):
     
-    def OnLogin(self):
+    def OnLogin(self, bRelink):
         import customprotocol.p_player
         oBaseInfo = customprotocol.p_player.P_BaseInfo()
         oBaseInfo.m_Uid = self.m_ID
         oBaseInfo.m_Name = self.GetName()
-        print(oBaseInfo)
         self.SendProtocol(oBaseInfo)
 
     def OnDisconnected(self):

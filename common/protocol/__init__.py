@@ -1,3 +1,5 @@
+#encoding: utf-8
+
 from .protocolbase import *
 import struct
 

@@ -1,11 +1,13 @@
 #encoding: utf-8
 
+from global_defins import GetMillisecond
 import protocol
 import struct
 import logger
 import player
 import service
 import database
+import time
 
 def OnAnswer(oLink, oProtocol):
     # 判断回复的数据是否正确，不正确的话就断掉
@@ -28,17 +30,16 @@ def OnLoginAccount(oLink, oAccountProtocol):
     oPlayer.Login()
     oLink.ConnectedFinish()
 
-def OnEcho(oLink, oEcho):
-    logger.Info(oEcho.m_Text)
-
-    p = protocol.P_Echo()
-    p.m_Text = bytes("Copy that!", encoding="utf-8")
+def OnRequestTime(oLink, oRequestTime):
+    p = protocol.P_SyncTime()
+    p.m_ClientTime = oRequestTime.m_ClientTime
+    p.m_ServerTime = GetMillisecond()
     oLink.SendProtocol(p)
 
 g_Func = {
     protocol.P_AnswerHello_Idx : OnAnswer,
     protocol.P_Login_Idx : OnLoginAccount,
-    protocol.P_Echo_Idx : OnEcho,
+    protocol.P_RequestSyncTime_Idx : OnRequestTime,
 }
 
 def OnEntry(oLink, data):
@@ -51,5 +52,6 @@ def OnEntry(oLink, data):
     oProtocol = cls()
     oProtocol.UnpackData(data)
     oFunc = g_Func.get(oProtocol.m_ProtocolNumber, None)
+    logger.Info(oFunc)
     if oFunc:
         oFunc(oLink, oProtocol)

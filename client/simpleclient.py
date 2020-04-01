@@ -5,8 +5,15 @@ sys.path.append("../common")
 
 # 把协议文件拷过来用
 import shutil
-shutil.rmtree("customprotocol/")
-shutil.copytree("../logic/customprotocol", "customprotocol/")
+try:
+    shutil.rmtree("customprotocol/")
+except:
+    pass
+
+try:
+    shutil.copytree("../logic/customprotocol", "customprotocol/")
+except:
+    pass
 
 #客户端与上一个没有任何改变
 import protocol

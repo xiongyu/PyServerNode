@@ -1,4 +1,5 @@
 #encoding:utf-8
+import global_defines
 
 import struct
 import protocol
@@ -27,9 +28,16 @@ def OnLoginAccount(oLink, oAccountProtocol):
     oPlayer.Login()
     oLink.ConnectedFinish()
 
+def OnRequestTime(oLink, oRequestTime):
+    p = protocol.p_login.P_SyncTime()
+    p.m_ClientTime = oRequestTime.m_ClientTime
+    p.m_ServerTime = global_defines.GetMillisecond()
+    oLink.SendProtocol(p)
+
 g_Func = {
     protocol.P_AnswerHello_Idx : OnAnswer,
     protocol.P_Login_Idx : OnLoginAccount,
+    protocol.P_RequestSyncTime_Idx : OnRequestTime,
 }
 
 def OnEntry(oLink, pkgdata, oOtherEntryFunc):
