@@ -37,7 +37,8 @@ class P_SyncTime(CProtocol):
     m_ProtocolNumber = 0x5
     m_Define = (
         ("m_ClientTime", VarType.uInt32),
-        ("m_ServerTime", VarType.uInt32),
+        ("m_ServerTimeS", VarType.uInt32),
+        ("m_ServerTimeMS", VarType.uInt16),
     )
 
 class P_Echo(CProtocol):

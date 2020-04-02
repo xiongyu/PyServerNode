@@ -1,15 +1,37 @@
 #encoding: utf-8
 
-import time, bisect
+import bisect
+import time
+
+class CTimeManager:
+
+    def __init__(self):
+        self.m_TimeDifference = 0
+        self.m_Millisecond = 0
+
+    def SetTimeDifference(self, iMillisecond):
+        self.m_TimeDifference = iMillisecond
+
+    # 返回时间时要检查下，如果对时， 发现时间快了，要继续当前时间直到超越
+    def GetMillisecond(self):
+        iMillisecond = int(round(time.time() * 1000))\
+             + self.m_TimeDifference
+        if self.m_Millisecond >= iMillisecond:
+            return self.m_Millisecond
+        self.m_Millisecond = iMillisecond
+        return iMillisecond
+
+    def GetSecond(self):
+        iMillisecond = self.GetMillisecond()
+        return int(iMillisecond / 1000.0)
+if not 'g_TimeManager' in globals():
+    g_TimeManager = CTimeManager()
 
 class CTimerManager:
 
     def __init__(self):
         self.m_Timers = []
         self.m_Mapping = {}
-
-    def GetMTime(self):
-        return int(round(time.time() * 1000))
 
     def Schedule(self, oCBFunc, msec: int, sFlag: str):
         oTimer = CTimer(msec, oCBFunc, sFlag)
@@ -31,7 +53,7 @@ class CTimerManager:
 
     def Frame(self):
         oTimeoutList = []
-        iMsec = self.GetMTime()
+        iMsec = GetMillisecond()
         for oTimer in self.m_Timers:
             if iMsec < oTimer.m_Time:
                 break
@@ -44,25 +66,16 @@ class CTimerManager:
 
     def Exit(self):
         pass
-
 if not "g_TimerManager" in globals():
     g_TimerManager = CTimerManager()
 
-def Frame():
-    g_TimerManager.Frame()
-
-def Schedule(oCBFunc, msec: int, sFlag: str):
-    g_TimerManager.Schedule(oCBFunc, msec, sFlag)
-
-def Unschedule(sFlag):
-    g_TimerManager.RemoveTimer(sFlag)
 
 class CTimer:
 
     def __init__(self, msec, oCBFunc, sFlag):
         self.m_CBFunc = oCBFunc
         self.m_Flag = sFlag
-        self.m_Time = int(round(time.time() * 1000)) + msec
+        self.m_Time = GetMillisecond() + msec
 
     # 大于
     def __gt__(self, oTimer):
@@ -87,3 +100,30 @@ class CTimer:
         if self.m_Time == oTimer.m_Time:
             return True
         return self.m_Time > oTimer.m_Time or self.m_Time == oTimer.m_Time
+
+
+def Frame():
+    g_TimerManager.Frame()
+
+def Schedule(oCBFunc, msec: int, sFlag: str):
+    g_TimerManager.Schedule(oCBFunc, msec, sFlag)
+
+def Unschedule(sFlag):
+    g_TimerManager.RemoveTimer(sFlag)
+
+def GetMillisecond():
+    return g_TimeManager.GetMillisecond()
+
+def GetShortMillisecond():
+    iMillisecond = GetMillisecond()
+    iShortMsecond = iMillisecond - (int(iMillisecond / 1000.0) * 1000)
+    return iShortMsecond
+
+def GetSecond():
+    return g_TimeManager.GetSecond()
+
+def SetTimeDifference(iMillisecond):
+    g_TimeManager.SetTimeDifference(iMillisecond)
+
+def MillisecondSleep(iMillisecond):
+    time.sleep(iMillisecond / 1000.0)

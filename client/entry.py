@@ -1,11 +1,11 @@
 #encoding: utf-8
 
-import global_defines
+from bindfunc import CFunction
 import protocol
 import customprotocol.p_player
 import struct
 import logger
-import time
+import timer
 
 def OnHello(sock, oProtocol):
     print("Hello", oProtocol.m_Seed)
@@ -34,13 +34,24 @@ def OnPlayerInfo(sock, oInfo):
     print(oInfo.m_Name)
 
     p = protocol.p_login.P_RequestSyncTime()
-    p.m_ClientTime = global_defines.GetMillisecond()
+    p.m_ClientTime = timer.GetSecond()
 
     data = p.PacketData()
     sock.send(data)
 
 def OnSyncTime(sock, oSyncTime):
-    print("SyncTime:", oSyncTime.m_ClientTime, oSyncTime.m_ServerTime)
+    def TimerSyncTime(sock):
+        p = protocol.p_login.P_RequestSyncTime()
+        p.m_ClientTime = timer.GetSecond()
+
+        data = p.PacketData()
+        sock.send(data)
+        
+    print("SyncTime:", oSyncTime.m_ClientTime, oSyncTime.m_ServerTimeS, oSyncTime.m_ServerTimeMS)
+    iClientMS = timer.GetMillisecond() 
+    iServerMS = oSyncTime.m_ServerTimeS * 1000 + oSyncTime.m_ServerTimeMS
+    timer.SetTimeDifference(iClientMS - iServerMS)
+    timer.Schedule(CFunction(TimerSyncTime, sock), 5000, "TimerSyncTime")
 
 g_Func = {
     protocol.P_Hello_Idx : OnHello,
@@ -52,9 +63,8 @@ g_Func = {
 def OnEntry(sock, data):
     iProtocolNumber = struct.unpack("H", data[2:4])[0]
     cls = protocol.GetProtocol(iProtocolNumber)
-    logger.Info("有数据包进来可以解析了,%s"%(iProtocolNumber))
     if not cls:
-        logger.Warning("没找到合适的解析协议")
+        logger.Warning("没找到合适的解析协议 %s"%(iProtocolNumber))
         return
     oProtocol = cls()
     oProtocol.UnpackData(data)

@@ -83,7 +83,7 @@ def NetworkThread(oTcpServer):
                     recvData = oClientSocket.recv(1024)
 
                     if len(recvData) > 0:
-                        logger.Info('massage from [%s] is %s'%(str(addr), str(recvData)))
+                        #logger.Info('massage from [%s] is %s'%(str(addr), str(recvData)))
                         oMsg = CNetWorkMessage(MSG_READ, oTcpSocket.m_ID, Data = recvData)
                         oTcpServer.PushMessage(oMsg)
                     else:
@@ -152,9 +152,7 @@ class CTcpServer(CFuncBinder):
         if not iSocketID in self.m_SocketID2FD:
             return False
         iFD = self.m_SocketID2FD[iSocketID]
-        logger.Info("WriteData:%s %s"%(iSocketID, iFD))
         if not iFD in self.m_Sockets:
-            logger.Info("WriteData:%s failed"%iSocketID)
             return False
         oTcpSocket = self.m_Sockets[iFD]
         oTcpSocket.m_Socket.send(data)
@@ -176,7 +174,6 @@ class CTcpServer(CFuncBinder):
         # 处理发包队列
         while not self.m_SendQueue.empty():
             iSocketID, data = self.m_SendQueue.get()
-            logger.Info("send queue")
             self.WriteData(iSocketID, data)            
 
     def Exit(self):

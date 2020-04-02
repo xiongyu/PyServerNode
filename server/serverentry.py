@@ -1,11 +1,10 @@
 #encoding:utf-8
-import global_defines
-
 import struct
 import protocol
 import logger
 import database
 import service
+import timer
 
 def OnAnswer(oLink, oProtocol):
     # 判断回复的数据是否正确，不正确的话就断掉
@@ -29,9 +28,11 @@ def OnLoginAccount(oLink, oAccountProtocol):
     oLink.ConnectedFinish()
 
 def OnRequestTime(oLink, oRequestTime):
+    oLink.Heartbeat()
     p = protocol.p_login.P_SyncTime()
     p.m_ClientTime = oRequestTime.m_ClientTime
-    p.m_ServerTime = global_defines.GetMillisecond()
+    p.m_ServerTimeS = timer.GetSecond()
+    p.m_ServerTimeMS= timer.GetShortMillisecond()
     oLink.SendProtocol(p)
 
 g_Func = {
@@ -43,9 +44,8 @@ g_Func = {
 def OnEntry(oLink, pkgdata, oOtherEntryFunc):
     iProtocolNumber = struct.unpack("H", pkgdata[2:4])[0]
     cls = protocol.GetProtocol(iProtocolNumber)
-    logger.Info("有数据包进来可以解析了")
     if not cls:
-        logger.Warning("没找到合适的解析协议")
+        logger.Warning("没找到合适的解析协议 %s"%(iProtocolNumber))
         return
     oProtocol = cls()
     oProtocol.UnpackData(pkgdata)

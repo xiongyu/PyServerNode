@@ -83,6 +83,8 @@ class CServerApplication:
             except Exception as e:
                 traceback.print_exc()
 
+            timer.MillisecondSleep(1)
+
         logger.Info("进程退出")
         self.m_Server.Exit()
 
