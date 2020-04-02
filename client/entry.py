@@ -50,7 +50,8 @@ def OnSyncTime(sock, oSyncTime):
     print("SyncTime:", oSyncTime.m_ClientTime, oSyncTime.m_ServerTimeS, oSyncTime.m_ServerTimeMS)
     iClientMS = timer.GetMillisecond() 
     iServerMS = oSyncTime.m_ServerTimeS * 1000 + oSyncTime.m_ServerTimeMS
-    print("Time:", iClientMS, iServerMS)
+    iTimeDiff = iServerMS - iClientMS
+    print("Time:%s %s TimeDiff:%s"%(iClientMS, iServerMS, iTimeDiff))
     timer.SetTimeDifference(iClientMS - iServerMS)
     timer.Schedule(CFunction(TimerSyncTime, sock), 5000, "TimerSyncTime")
 
