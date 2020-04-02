@@ -29,9 +29,10 @@ s=socket(AF_INET, SOCK_STREAM)
 s.connect((address,port))
 
 g_Data = bytes()
+g_Exit = False
 
 def NetworkThread():
-    global g_Data
+    global g_Data, g_Exit
     while True:
         recvdata=s.recv(1024)
         if not recvdata:
@@ -45,12 +46,13 @@ def NetworkThread():
         print(pkglist)
         for pkgdata in pkglist:
             entry.OnEntry(s, pkgdata)
+    g_Exit = True
 
 t = threading.Thread(target = NetworkThread,args = ())
 t.start()
-while True:
+while not g_Exit:
     timer.Frame()
     timer.MillisecondSleep(1)
-    
+
 s.close()
 logger.Info("Exit! Bye!~")
